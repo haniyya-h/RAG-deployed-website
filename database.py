@@ -9,10 +9,32 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
+def get_supabase_config():
+    """Get Supabase configuration from Streamlit secrets or .env file"""
+    try:
+        # Try Streamlit secrets first (for deployment)
+        import streamlit as st
+        if hasattr(st, 'secrets'):
+            return {
+                'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+            }
+    except:
+        pass
+    
+    # Fall back to environment variables
+    return {
+        'url': os.getenv('SUPABASE_URL'),
+        'key': os.getenv('SUPABASE_KEY'),
+        'db_url': os.getenv('SUPABASE_DB_URL')
+    }
+
 class SupabaseVectorStore:
     def __init__(self):
-        self.url = os.getenv("SUPABASE_URL")
-        self.key = os.getenv("SUPABASE_KEY")
+        config = get_supabase_config()
+        self.url = config['url']
+        self.key = config['key']
         self.supabase: Client = create_client(self.url, self.key)
     
     def store_embeddings(self, grade, subject, documents, embeddings):

@@ -17,6 +17,39 @@ from database import SupabaseVectorStore
 # Load environment variables (override=True ensures .env file takes precedence)
 load_dotenv(override=True)
 
+# Check for Streamlit secrets first (for deployment), then fall back to .env
+def get_api_key():
+    """Get API key from Streamlit secrets or .env file"""
+    try:
+        # Try Streamlit secrets first (for deployment)
+        if hasattr(st, 'secrets') and 'GOOGLE_API_KEY' in st.secrets:
+            return st.secrets['GOOGLE_API_KEY']
+    except:
+        pass
+    
+    # Fall back to environment variable
+    return os.getenv('GOOGLE_API_KEY')
+
+def get_supabase_config():
+    """Get Supabase configuration from Streamlit secrets or .env file"""
+    try:
+        # Try Streamlit secrets first (for deployment)
+        if hasattr(st, 'secrets'):
+            return {
+                'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+            }
+    except:
+        pass
+    
+    # Fall back to environment variables
+    return {
+        'url': os.getenv('SUPABASE_URL'),
+        'key': os.getenv('SUPABASE_KEY'),
+        'db_url': os.getenv('SUPABASE_DB_URL')
+    }
+
 # Configuration
 GRADES = ['9', '10', '11', '12']
 SUBJECTS = ['Mathematics', 'Biology', 'Chemistry', 'Physics', 'Computer Science']
@@ -33,18 +66,28 @@ if 'current_grade_subject' not in st.session_state:
 @st.cache_resource
 def load_embeddings():
     """Load Google Generative AI embeddings model"""
+    api_key = get_api_key()
+    if not api_key:
+        st.error("❌ Google API key not found. Please set GOOGLE_API_KEY in your secrets or .env file.")
+        st.stop()
+    
     return GoogleGenerativeAIEmbeddings(
         model="models/embedding-001",
-        google_api_key=os.getenv("GOOGLE_API_KEY")
+        google_api_key=api_key
     )
 
 @st.cache_resource
 def load_llm():
     """Load Google Generative AI language model"""
+    api_key = get_api_key()
+    if not api_key:
+        st.error("❌ Google API key not found. Please set GOOGLE_API_KEY in your secrets or .env file.")
+        st.stop()
+    
     return ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.1,
-        google_api_key=os.getenv("GOOGLE_API_KEY")
+        google_api_key=api_key
     )
 
 def subject_to_filename(subject):
