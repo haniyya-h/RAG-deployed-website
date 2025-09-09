@@ -23,7 +23,7 @@ def get_api_key():
     try:
         # Try Streamlit secrets first (for deployment)
         if hasattr(st, 'secrets'):
-            st.write("🔍 Debug: Checking Streamlit secrets...")
+            st.write("🔍 Debug: Checking secrets structure...")
             st.write(f"Secrets type: {type(st.secrets)}")
             st.write(f"Secrets keys: {list(st.secrets.keys()) if hasattr(st.secrets, 'keys') else 'No keys method'}")
             
