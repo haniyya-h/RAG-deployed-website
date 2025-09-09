@@ -23,17 +23,31 @@ def get_api_key():
     try:
         # Try Streamlit secrets first (for deployment)
         if hasattr(st, 'secrets'):
+            st.write("🔍 Debug: Checking Streamlit secrets...")
+            st.write(f"Secrets type: {type(st.secrets)}")
+            st.write(f"Secrets keys: {list(st.secrets.keys()) if hasattr(st.secrets, 'keys') else 'No keys method'}")
+            
             # Check if secrets are nested under 'secrets' key
-            if 'secrets' in st.secrets and 'GOOGLE_API_KEY' in st.secrets['secrets']:
-                return st.secrets['secrets']['GOOGLE_API_KEY']
+            if 'secrets' in st.secrets:
+                st.write("Found nested 'secrets' key")
+                nested_secrets = st.secrets['secrets']
+                st.write(f"Nested secrets keys: {list(nested_secrets.keys()) if hasattr(nested_secrets, 'keys') else 'No keys method'}")
+                if 'GOOGLE_API_KEY' in nested_secrets:
+                    st.write("✅ Found GOOGLE_API_KEY in nested secrets")
+                    return nested_secrets['GOOGLE_API_KEY']
             # Also try direct access
             elif 'GOOGLE_API_KEY' in st.secrets:
+                st.write("✅ Found GOOGLE_API_KEY in direct secrets")
                 return st.secrets['GOOGLE_API_KEY']
+            else:
+                st.write("❌ GOOGLE_API_KEY not found in secrets")
     except Exception as e:
-        print(f"Error accessing Streamlit secrets: {e}")
+        st.write(f"❌ Error accessing Streamlit secrets: {e}")
     
     # Fall back to environment variable
-    return os.getenv('GOOGLE_API_KEY')
+    env_key = os.getenv('GOOGLE_API_KEY')
+    st.write(f"Environment variable GOOGLE_API_KEY: {'Found' if env_key else 'Not found'}")
+    return env_key
 
 def get_supabase_config():
     """Get Supabase configuration from Streamlit secrets or .env file"""
