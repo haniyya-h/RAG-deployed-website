@@ -22,10 +22,10 @@ def get_api_key():
     """Get API key from Streamlit secrets or .env file"""
     try:
         # Try Streamlit secrets first (for deployment)
-        if hasattr(st, 'secrets') and 'GOOGLE_API_KEY' in st.secrets:
+        if hasattr(st, 'secrets') and hasattr(st.secrets, 'GOOGLE_API_KEY'):
             return st.secrets['GOOGLE_API_KEY']
-    except:
-        pass
+    except Exception as e:
+        print(f"Error accessing Streamlit secrets: {e}")
     
     # Fall back to environment variable
     return os.getenv('GOOGLE_API_KEY')
@@ -67,8 +67,15 @@ if 'current_grade_subject' not in st.session_state:
 def load_embeddings():
     """Load Google Generative AI embeddings model"""
     api_key = get_api_key()
+    
+    # Debug information
+    st.write("🔍 Debug Info:")
+    st.write(f"API Key found: {bool(api_key)}")
+    st.write(f"API Key length: {len(api_key) if api_key else 0}")
+    
     if not api_key:
         st.error("❌ Google API key not found. Please set GOOGLE_API_KEY in your secrets or .env file.")
+        st.write("Available environment variables:", [k for k in os.environ.keys() if 'GOOGLE' in k])
         st.stop()
     
     return GoogleGenerativeAIEmbeddings(
