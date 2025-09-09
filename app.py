@@ -22,8 +22,13 @@ def get_api_key():
     """Get API key from Streamlit secrets or .env file"""
     try:
         # Try Streamlit secrets first (for deployment)
-        if hasattr(st, 'secrets') and hasattr(st.secrets, 'GOOGLE_API_KEY'):
-            return st.secrets['GOOGLE_API_KEY']
+        if hasattr(st, 'secrets'):
+            # Check if secrets object exists and has the key
+            if hasattr(st.secrets, 'GOOGLE_API_KEY') and st.secrets['GOOGLE_API_KEY']:
+                return st.secrets['GOOGLE_API_KEY']
+            # Also try accessing as dictionary
+            elif 'GOOGLE_API_KEY' in st.secrets and st.secrets['GOOGLE_API_KEY']:
+                return st.secrets['GOOGLE_API_KEY']
     except Exception as e:
         print(f"Error accessing Streamlit secrets: {e}")
     
@@ -72,6 +77,15 @@ def load_embeddings():
     st.write("🔍 Debug Info:")
     st.write(f"API Key found: {bool(api_key)}")
     st.write(f"API Key length: {len(api_key) if api_key else 0}")
+    
+    # Debug Streamlit secrets
+    try:
+        st.write("Streamlit secrets available:", hasattr(st, 'secrets'))
+        if hasattr(st, 'secrets'):
+            st.write("Secrets keys:", list(st.secrets.keys()) if hasattr(st.secrets, 'keys') else "No keys method")
+            st.write("GOOGLE_API_KEY in secrets:", 'GOOGLE_API_KEY' in st.secrets if hasattr(st.secrets, '__contains__') else "Cannot check")
+    except Exception as e:
+        st.write(f"Error checking secrets: {e}")
     
     if not api_key:
         st.error("❌ Google API key not found. Please set GOOGLE_API_KEY in your secrets or .env file.")
