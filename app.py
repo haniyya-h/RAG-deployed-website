@@ -82,23 +82,8 @@ def load_embeddings():
     """Load Google Generative AI embeddings model"""
     api_key = get_api_key()
     
-    # Debug information
-    st.write("🔍 Debug Info:")
-    st.write(f"API Key found: {bool(api_key)}")
-    st.write(f"API Key length: {len(api_key) if api_key else 0}")
-    
-    # Debug Streamlit secrets
-    try:
-        st.write("Streamlit secrets available:", hasattr(st, 'secrets'))
-        if hasattr(st, 'secrets'):
-            st.write("Secrets keys:", list(st.secrets.keys()) if hasattr(st.secrets, 'keys') else "No keys method")
-            st.write("GOOGLE_API_KEY in secrets:", 'GOOGLE_API_KEY' in st.secrets if hasattr(st.secrets, '__contains__') else "Cannot check")
-    except Exception as e:
-        st.write(f"Error checking secrets: {e}")
-    
     if not api_key:
         st.error("❌ Google API key not found. Please set GOOGLE_API_KEY in your secrets or .env file.")
-        st.write("Available environment variables:", [k for k in os.environ.keys() if 'GOOGLE' in k])
         st.stop()
     
     return GoogleGenerativeAIEmbeddings(
