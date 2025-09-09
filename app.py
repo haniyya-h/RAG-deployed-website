@@ -23,11 +23,11 @@ def get_api_key():
     try:
         # Try Streamlit secrets first (for deployment)
         if hasattr(st, 'secrets'):
-            # Check if secrets object exists and has the key
-            if hasattr(st.secrets, 'GOOGLE_API_KEY') and st.secrets['GOOGLE_API_KEY']:
-                return st.secrets['GOOGLE_API_KEY']
-            # Also try accessing as dictionary
-            elif 'GOOGLE_API_KEY' in st.secrets and st.secrets['GOOGLE_API_KEY']:
+            # Check if secrets are nested under 'secrets' key
+            if 'secrets' in st.secrets and 'GOOGLE_API_KEY' in st.secrets['secrets']:
+                return st.secrets['secrets']['GOOGLE_API_KEY']
+            # Also try direct access
+            elif 'GOOGLE_API_KEY' in st.secrets:
                 return st.secrets['GOOGLE_API_KEY']
     except Exception as e:
         print(f"Error accessing Streamlit secrets: {e}")
@@ -40,13 +40,22 @@ def get_supabase_config():
     try:
         # Try Streamlit secrets first (for deployment)
         if hasattr(st, 'secrets'):
-            return {
-                'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
-                'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
-                'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
-            }
-    except:
-        pass
+            # Check if secrets are nested under 'secrets' key
+            if 'secrets' in st.secrets:
+                return {
+                    'url': st.secrets['secrets'].get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                    'key': st.secrets['secrets'].get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                    'db_url': st.secrets['secrets'].get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+                }
+            # Also try direct access
+            else:
+                return {
+                    'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                    'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                    'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+                }
+    except Exception as e:
+        print(f"Error accessing Supabase secrets: {e}")
     
     # Fall back to environment variables
     return {

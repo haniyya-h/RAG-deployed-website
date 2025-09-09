@@ -15,13 +15,22 @@ def get_supabase_config():
         # Try Streamlit secrets first (for deployment)
         import streamlit as st
         if hasattr(st, 'secrets'):
-            return {
-                'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
-                'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
-                'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
-            }
-    except:
-        pass
+            # Check if secrets are nested under 'secrets' key
+            if 'secrets' in st.secrets:
+                return {
+                    'url': st.secrets['secrets'].get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                    'key': st.secrets['secrets'].get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                    'db_url': st.secrets['secrets'].get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+                }
+            # Also try direct access
+            else:
+                return {
+                    'url': st.secrets.get('SUPABASE_URL', os.getenv('SUPABASE_URL')),
+                    'key': st.secrets.get('SUPABASE_KEY', os.getenv('SUPABASE_KEY')),
+                    'db_url': st.secrets.get('SUPABASE_DB_URL', os.getenv('SUPABASE_DB_URL'))
+                }
+    except Exception as e:
+        print(f"Error accessing Supabase secrets: {e}")
     
     # Fall back to environment variables
     return {
